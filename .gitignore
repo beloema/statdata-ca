@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Credentials and environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Downloaded data
+data/
+*.csv
+*.zip
+
+# Backups
+*.before-step43
+*.bak
+*.bak-*
+
+# Local files
+.DS_Store
+*.log
+*.sqlite
+*.sqlite3
+.idea/
+.vscode/

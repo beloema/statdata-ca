@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STATDATA.CA | Canadian Statistics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+</script>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #f7f8fa; color: #182332; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+header { background: #fff; border-bottom: 1px solid #e5e8ed; padding: 22px 6%; }
+.logo { font-size: 23px; font-weight: 800; letter-spacing: -1px; }
+.logo span { color: #2563eb; }
+main { max-width: 1250px; margin: 45px auto; padding: 0 24px; }
+h1 { font-size: 30px; margin-bottom: 6px; }
+.subtitle { color: #667085; margin-bottom: 32px; }
+.cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.card, .panel { background: white; border: 1px solid #e5e8ed; border-radius: 12px; padding: 24px; }
+.card { cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.card:hover, .card.active { border-color: #2563eb; }
+.label { color: #667085; font-size: 14px; }
+.value { font-size: 28px; font-weight: 700; margin: 12px 0; }
+.date { color: #98a2b3; font-size: 12px; }
+.panel { margin-top: 24px; }
+.panel h2 { font-size: 20px; }
+.chart-wrap { position: relative; height: 350px; }
+footer { text-align: center; margin: 45px; color: #98a2b3; font-size: 13px; }
+@media(max-width:750px) { .cards { grid-template-columns: 1fr; } }
+
+.ranges { display:flex; gap:8px; margin:18px 0; }
+.ranges button { background:#f3f5f8; border:1px solid #e5e8ed; border-radius:7px; padding:9px 17px; cursor:pointer; color:#344054; }
+.ranges button.active { background:#2563eb; color:white; border-color:#2563eb; }
+
+.regional-controls {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.regional-controls button {
+  padding: 10px 18px;
+  border: 1px solid #e5e8ed;
+  background: #f3f5f8;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.regional-controls button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+.regional-chart-wrap {
+  position: relative;
+  height: 500px;
+  margin-top: 20px;
+}
+
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 22px;
+}
+.analytics-card {
+  background: #f8fafc;
+  border: 1px solid #e5e8ed;
+  border-radius: 10px;
+  padding: 20px;
+}
+.analytics-card .value {
+  font-size: 24px;
+}
+@media(max-width:750px) {
+  .analytics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+</style>
+<link rel="stylesheet" href="/static/theme.css">
+<script>
+try {
+  document.documentElement.dataset.theme =
+    localStorage.getItem("statdata-theme") || "dark";
+} catch (_) {
+  document.documentElement.dataset.theme = "dark";
+}
+</script>
+</head>
+<body>
+
+<header>
+  <div class="site-header-inner">
+    <div class="logo">STATDATA<span>.CA</span></div>
+    <button id="theme-toggle" class="theme-toggle"
+            type="button" aria-pressed="true">
+      Light mode
+    </button>
+  </div>
+</header>
+
+<main>
+<nav id="section-nav" class="section-nav" aria-label="Dashboard sections"></nav>
+<h1 id="page-title">Canada at a Glance</h1>
+<p class="subtitle" id="page-subtitle">Explore Canadian economic and demographic data from Statistics Canada.</p>
+
+<div class="cards" id="cards"></div>
+
+<div class="panel">
+<h2 id="chart-title">Historical Trends</h2>
+<div class="ranges" id="range-filters">
+<button onclick="setRange('1Y')">1Y</button>
+<button onclick="setRange('5Y')">5Y</button>
+<button class="active" onclick="setRange('10Y')">10Y</button>
+<button onclick="setRange('ALL')">All</button>
+</div>
+<div class="export-toolbar">
+  <button id="download-csv" type="button">
+    ↓ Download CSV
+  </button>
+</div>
+<div class="chart-wrap"><canvas id="chart"></canvas></div>
+</div>
+
+
+<div class="panel">
+  <h2>Statistical Analysis</h2>
+  <p class="date" id="analytics-date"></p>
+  <div class="analytics-grid" id="analytics-cards">
+    Loading statistics...
+  </div>
+</div>
+<div class="panel" id="regional-panel" style="display:none">
+  <h2 id="regional-title">Regional Comparison</h2>
+
+  
+
+  <p class="date" id="regional-date"></p>
+
+  <div class="regional-chart-wrap">
+    <canvas id="regional-chart"></canvas>
+  </div>
+<div class="regional-trend">
+  <div class="regional-trend-header">
+    <h3>Regional Trends Over Time</h3>
+    <label for="region-trend-select">
+      Compare with Canada
+      <select id="region-trend-select"></select>
+    </label>
+  </div>
+  <p class="date" id="region-trend-description"></p>
+  
+<div class="regional-insights" id="regional-insights"></div>
+<div class="regional-export">
+  <button type="button" id="regional-download" disabled>
+    ↓ Download Regional CSV
+  </button>
+</div>
+<div class="region-trend-chart-wrap">
+    <canvas id="region-trend-chart"></canvas>
+  </div>
+</div>
+
+</div>
+
+</main>
+<footer>Data source: Statistics Canada | STATDATA.CA</footer>
+
+<script>
+const datasets = {
+ inflation_rate: { label: "Annual Inflation Rate", unit: "%" },
+ inflation: { label: "Consumer Price Index", unit: "Index (2002=100)" },
+ interest_rates: { label: "Target Interest Rate", unit: "%" },
+ exchange_rates: { label: "USD/CAD Exchange Rate", unit: "CAD per USD" },
+ employment: { label: "Unemployment Rate", unit: "%" },
+ gdp: { label: "Real GDP", unit: "Millions of chained 2017 CAD, annualized" },
+ population: { label: "Canadian Population", unit: "Persons" }
+};
+
+let chart;
+let selected = "inflation";
+let selectedRange = "10Y";
+
+function setRange(period) {
+ selectedRange = period;
+ document.querySelectorAll(".ranges button").forEach(button => {
+  button.classList.toggle("active", button.dataset.range === period);
+ });
+ selectDataset(selected);
+}
+
+function formatValue(key, value) {
+  if (key === "inflation_rate") return value.toFixed(1) + "%";
+ if (key === "gdp") return (value / 1000000).toFixed(2) + "T";
+ if (key === "population") return (value / 1000000).toFixed(2) + "M";
+ if (key === "exchange_rates") return value.toFixed(4);
+ if (key === "inflation") return value.toFixed(1);
+ return value.toFixed(2) + "%";
+}
+
+async function loadOverview() {
+ const response = await fetch("/api/overview");
+ if (!response.ok) throw new Error("Overview unavailable");
+ const data = await response.json();
+
+ document.getElementById("cards").innerHTML =
+ Object.entries(datasets).map(([key, config]) => {
+  const item = data[key];
+  return `
+   <button class="card ${key === selected ? 'active' : ''}"
+           onclick="selectDataset('${key}')">
+    <div class="label">${config.label}</div>
+    <div class="value">${item ? formatValue(key, item.value) : "N/A"}</div>
+    <div class="date">${item ? item.date : "Unavailable"}</div>
+   </button>`;
+ }).join("");
+}
+
+async function selectDataset(key) {
+ const panel = document.getElementById("regional-panel");
+
+ if (panel) {
+   const show = key === "employment" || key === "population";
+   panel.style.display = show ? "" : "none";
+
+   if (show) {
+     document.getElementById("regional-title").textContent =
+       key === "employment"
+       ? "Unemployment by Province"
+       : "Population by Province & Territory";
+
+     loadRegional(key);
+     if (window.loadRegionTrend) window.loadRegionTrend(key);
+   }
+ }
+
+ loadAnalytics(key);
+ selected = key;
+ document.querySelectorAll(".card").forEach(card =>
+  card.classList.toggle("active", card.getAttribute("onclick").includes(`'${key}'`))
+ );
+ document.getElementById("chart-title").textContent =
+  datasets[key].label + " — Historical Trend";
+
+ const response = await fetch("/api/chart/" + key + "?range=" + selectedRange);
+ if (!response.ok) throw new Error("History unavailable");
+ const rows = await response.json();
+
+ if (chart) chart.destroy();
+ chart = new Chart(document.getElementById("chart"), {
+  type: "line",
+  data: {
+   labels: rows.map(r => r.date),
+   datasets: [{
+    label: datasets[key].unit,
+    data: rows.map(r => r.value),
+    borderColor: chartColor(),
+    backgroundColor: chartFill(),
+    fill: true,
+    tension: 0.25,
+    pointRadius: 0
+   }]
+  },
+  options: {
+   responsive: true,
+   maintainAspectRatio: false,
+   interaction: { intersect: false, mode: "index" },
+   plugins: { legend: { display: false } },
+   scales: { x: { ticks: { maxTicksLimit: 8 } } }
+  }
+ });
+}
+
+loadOverview().then(() => selectDataset(selected)).catch(console.error);
+
+let regionalChart;
+
+async function loadRegional(dataset) {
+  const buttons = document.querySelectorAll(
+    ".regional-controls button"
+  );
+
+  buttons.forEach((button, index) => {
+    button.classList.toggle(
+      "active",
+      dataset === (index === 0 ? "employment" : "population")
+    );
+  });
+
+  const dateLabel = document.getElementById("regional-date");
+  dateLabel.textContent = "Loading regional data...";
+
+  try {
+    const response = await fetch("/api/regions/" + dataset);
+    if (!response.ok) throw new Error("Regional data unavailable");
+
+    const data = await response.json();
+
+    dateLabel.textContent =
+      "Reference date: " + data.date + " | Source: Statistics Canada";
+
+    const regions = data.regions;
+
+    if (regionalChart) regionalChart.destroy();
+
+    regionalChart = new Chart(
+      document.getElementById("regional-chart"), {
+        type: "bar",
+        data: {
+          labels: regions.map(r => r.region),
+          datasets: [{
+            label: dataset === "employment"
+              ? "Unemployment rate (%)"
+              : "Population",
+            data: regions.map(r => r.value),
+            backgroundColor: chartColor(),
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { beginAtZero: true }
+          }
+        }
+      }
+    );
+  } catch (error) {
+    dateLabel.textContent = error.message;
+    console.error(error);
+  }
+}
+
+
+
+async function loadAnalytics(dataset) {
+  const container = document.getElementById("analytics-cards");
+  const dateLabel = document.getElementById("analytics-date");
+
+  container.textContent = "Loading statistics...";
+
+  try {
+    const response = await fetch("/api/analytics/" + dataset);
+    if (!response.ok) throw new Error("Analytics unavailable");
+
+    const data = await response.json();
+
+    if (selected !== dataset) return;
+
+    dateLabel.textContent =
+      "Latest observation: " + data.date +
+      " | Observations in past 12 months: " + data.observations_12m;
+
+    const format = value =>
+      value === null ? "N/A" : formatValue(dataset, value);
+
+    const change = data.annual_change === null
+      ? "N/A"
+      : (data.annual_change > 0 ? "+" : "") +
+        data.annual_change.toFixed(2) +
+        (data.change_unit === "percentage points" ? " pp" : "%");
+
+    const statistics = [
+      ["12-Month Average", format(data.average_12m)],
+      ["12-Month Minimum", format(data.minimum_12m)],
+      ["12-Month Maximum", format(data.maximum_12m)],
+      ["Annual Change", change]
+    ];
+
+    container.innerHTML = statistics.map(([label, value]) => `
+      <div class="analytics-card">
+        <div class="label">${label}</div>
+        <div class="value">${value}</div>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    container.textContent = "Unable to load analytics.";
+    console.error(error);
+  }
+}
+
+
+</script>
+<script src="/static/theme.js"></script>
+<script src="/static/navigation.js"></script>
+<script src="/static/export.js"></script>
+<script src="/static/region-trend.js"></script>
+<script src="/static/statdata-i18n.js"></script>
+</body>
+</html>
