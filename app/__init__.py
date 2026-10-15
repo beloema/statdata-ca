@@ -462,3 +462,9 @@ def region_history(dataset):
         "region_values": region_values,
         "canada_values": canada_values
     })
+
+
+@app.route("/about")
+@app.route("/a-propos")
+def about_page():
+    return render_template("about.html")

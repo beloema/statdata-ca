@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Découvrez STATDATA.CA, une plateforme indépendante de visualisation de données canadiennes créée par Emanuel Belony.">
+  <title>À propos | STATDATA.CA</title>
+
+  <script>
+    try {
+      document.documentElement.dataset.theme =
+        localStorage.getItem("statdata-theme") || "dark";
+      document.documentElement.lang =
+        localStorage.getItem("statdata-language") === "en" ? "en" : "fr";
+    } catch (e) {}
+  </script>
+
+  <link rel="stylesheet" href="/static/theme.css">
+  <link rel="stylesheet" href="/static/about.css">
+</head>
+
+<body>
+  <header>
+    <div class="site-header-inner">
+      <a class="logo about-logo" href="/">STATDATA<span>.CA</span></a>
+
+      <div class="about-header-actions">
+        <button id="language-toggle" class="theme-toggle" type="button">EN</button>
+        <button id="theme-toggle" class="theme-toggle" type="button"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="about-main">
+    <nav class="about-breadcrumb" aria-label="Navigation">
+      <a href="/">
+        <span class="lang-fr">← Tableau de bord</span>
+        <span class="lang-en">← Dashboard</span>
+      </a>
+    </nav>
+
+    <section class="about-hero">
+      <div class="about-eyebrow">
+        <span class="lang-fr">NOTRE HISTOIRE</span>
+        <span class="lang-en">OUR STORY</span>
+      </div>
+
+      <h1>
+        <span class="lang-fr">À propos de STATDATA.CA</span>
+        <span class="lang-en">About STATDATA.CA</span>
+      </h1>
+
+      <div class="about-copy lang-fr">
+        <p>
+          STATDATA.CA est une plateforme indépendante qui vise
+          à rendre les données canadiennes plus accessibles,
+          compréhensibles et faciles à explorer.
+        </p>
+
+        <p>
+          Ce projet est né de mon expérience professionnelle
+          à Statistique Canada et a été développé dans le cadre
+          de mon projet de fin d'études du
+          <strong>Certificat en science des données (4865)
+          de l'Université TÉLUQ</strong>.
+        </p>
+
+        <p>
+          Mon ambition est de continuer à faire évoluer cette
+          plateforme au fil des années et, éventuellement,
+          d'en faire un organisme sans but lucratif consacré
+          à la diffusion de données fiables, transparentes
+          et accessibles à tous les Canadiens.
+        </p>
+      </div>
+
+      <div class="about-copy lang-en">
+        <p>
+          STATDATA.CA is an independent platform dedicated to
+          making Canadian data more accessible, understandable,
+          and easier to explore.
+        </p>
+
+        <p>
+          The project was inspired by my professional experience
+          at Statistics Canada and developed as my final project
+          for the <strong>Certificate in Data Science (4865)
+          at Université TÉLUQ</strong>.
+        </p>
+
+        <p>
+          My goal is to continue developing the platform over
+          the years and eventually establish it as a nonprofit
+          organization dedicated to sharing reliable,
+          transparent, and accessible data with Canadians.
+        </p>
+      </div>
+    </section>
+
+    <section class="about-creator">
+      <div>
+        <div class="about-small-label">
+          <span class="lang-fr">CRÉATEUR</span>
+          <span class="lang-en">CREATOR</span>
+        </div>
+        <h2>Emanuel Belony</h2>
+        <p>
+          <span class="lang-fr">Développement Web et science des données</span>
+          <span class="lang-en">Web Development & Data Science</span>
+        </p>
+      </div>
+
+      <a href="https://emanuelbelony.com"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="about-portfolio">
+        emanuelbelony.com <span aria-hidden="true">↗</span>
+      </a>
+    </section>
+
+    <div class="about-disclaimer">
+      <span class="lang-fr">
+        STATDATA.CA est un projet indépendant, non affilié
+        à Statistique Canada ou à l'Université TÉLUQ.
+        Les données proviennent de sources officielles,
+        notamment de Statistique Canada.
+      </span>
+      <span class="lang-en">
+        STATDATA.CA is an independent project, not affiliated
+        with Statistics Canada or Université TÉLUQ.
+        Data is sourced from official sources,
+        including Statistics Canada.
+      </span>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 STATDATA.CA ·
+    <a href="https://emanuelbelony.com"
+       target="_blank"
+       rel="noopener noreferrer">Emanuel Belony</a>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    const languageToggle = document.getElementById("language-toggle");
+    const themeToggle = document.getElementById("theme-toggle");
+
+    function updateControls() {
+      const fr = root.lang === "fr";
+      const dark = root.dataset.theme === "dark";
+
+      languageToggle.textContent = fr ? "EN" : "FR";
+      languageToggle.setAttribute(
+        "aria-label", fr ? "Switch to English" : "Passer en français"
+      );
+
+      themeToggle.textContent = dark
+        ? (fr ? "Mode clair" : "Light mode")
+        : (fr ? "Mode sombre" : "Dark mode");
+    }
+
+    languageToggle.addEventListener("click", () => {
+      root.lang = root.lang === "fr" ? "en" : "fr";
+      localStorage.setItem("statdata-language", root.lang);
+      document.title = (root.lang === "fr" ? "À propos" : "About")
+        + " | STATDATA.CA";
+      updateControls();
+    });
+
+    themeToggle.addEventListener("click", () => {
+      root.dataset.theme =
+        root.dataset.theme === "dark" ? "light" : "dark";
+      localStorage.setItem("statdata-theme", root.dataset.theme);
+      updateControls();
+    });
+
+    updateControls();
+  </script>
+</body>
+</html>

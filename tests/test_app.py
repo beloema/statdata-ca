@@ -105,3 +105,15 @@ def test_root_dashboard(client):
     response = client.get("/")
     assert response.status_code == 200
     assert b"STATDATA" in response.data
+
+
+def test_about_page(client):
+    response = client.get("/about")
+    assert response.status_code == 200
+    assert b"Emanuel Belony" in response.data
+    assert b"emanuelbelony.com" in response.data
+    assert b"statdata-language" in response.data
+
+def test_about_french_alias(client):
+    response = client.get("/a-propos")
+    assert response.status_code == 200

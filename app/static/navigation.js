@@ -73,3 +73,14 @@ nav.addEventListener("click", event => {
   const button = event.target.closest("button[data-section]");
   if (button) navigate(button.dataset.section);
 });
+
+
+// About page link
+if (nav && !document.getElementById("about-nav-link")) {
+  nav.insertAdjacentHTML("beforeend", `
+    <a id="about-nav-link" href="/about" class="about-nav-link">
+      <span class="lang-fr">À propos</span>
+      <span class="lang-en">About</span>
+    </a>
+  `);
+}
