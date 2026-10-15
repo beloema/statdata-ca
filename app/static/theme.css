@@ -494,3 +494,13 @@ button:focus-visible {
     font-size: 19px;
   }
 }
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
