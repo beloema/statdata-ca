@@ -19,7 +19,7 @@ def client():
 
 
 def test_homepage(client):
-    response = client.get("/")
+    response = client.get("/health")
     assert response.status_code == 200
     assert response.json["status"] == "running"
 
@@ -99,3 +99,9 @@ def test_french_csv_export(client, dataset):
 def test_invalid_export_language(client):
     response = client.get("/api/export/gdp?lang=invalid")
     assert response.status_code == 400
+
+
+def test_root_dashboard(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert b"STATDATA" in response.data

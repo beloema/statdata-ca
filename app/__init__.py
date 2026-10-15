@@ -53,7 +53,7 @@ QUERIES = {
 
 QUERIES["inflation_rate"] = "SELECT date, value, unit FROM inflation_yoy ORDER BY date DESC LIMIT 1"
 
-@app.route("/")
+@app.route("/health")
 def home():
     return jsonify({
         "project": "STATDATA.CA",
@@ -108,6 +108,7 @@ def history(dataset):
 
 from flask import render_template
 
+@app.route("/")
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
