@@ -1,3 +1,16 @@
+
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
+def get_db_connection():
+    url = os.getenv("DATABASE_URL")
+    if url:
+        return psycopg2.connect(url)
+    return psycopg2.connect(dbname="statdata")
+
 from flask import Flask, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -52,7 +65,7 @@ def home():
 def overview():
     results = {}
 
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             for name, query in QUERIES.items():
                 cur.execute(query)
@@ -83,7 +96,7 @@ def history(dataset):
 
     query = queries[dataset] + " ORDER BY date DESC LIMIT 120"
 
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(query)
             rows = cur.fetchall()
@@ -139,7 +152,7 @@ def chart_data(dataset):
         """
         params = (years[period],)
 
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
@@ -171,7 +184,7 @@ def regional_comparison(dataset):
     table = config["table"]
     condition = config["filter"]
 
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(f"""
                 SELECT date
@@ -227,7 +240,7 @@ def analytics(dataset):
     if dataset not in sources:
         return jsonify({"error": "Unknown dataset"}), 404
 
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sources[dataset] + " ORDER BY date")
             rows = [(d, float(v)) for d, v in cur.fetchall()]
@@ -330,7 +343,7 @@ def export_csv(dataset):
         """
         params = (years[period],)
 
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
@@ -395,7 +408,7 @@ def region_history(dataset):
 
     table, condition = sources[dataset]
 
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(f"""
                 SELECT date, region, value
