@@ -1,5 +1,5 @@
 import pandas as pd
-import psycopg2
+from db import get_connection
 from psycopg2.extras import execute_values
 
 SOURCE = "data/raw/36100434.csv"
@@ -62,6 +62,9 @@ df = (
 df["unit"] = "Millions of chained 2017 CAD, annualized"
 
 df = df[["date", "industry", "unit", "value"]]
+if df.empty:
+    raise ValueError("No valid gdp observations matched Statistics Canada filters")
+
 df.to_csv(DESTINATION, index=False)
 
 print("2. Updating PostgreSQL...")
@@ -71,7 +74,7 @@ records = [
     for r in df.itertuples(index=False)
 ]
 
-with psycopg2.connect(dbname="statdata") as conn:
+with get_connection() as conn:
     with conn.cursor() as cur:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS gdp (

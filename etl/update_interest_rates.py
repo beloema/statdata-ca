@@ -2,7 +2,7 @@ import io
 import zipfile
 import requests
 import pandas as pd
-import psycopg2
+from db import get_connection
 from psycopg2.extras import execute_values
 
 URL = "https://www150.statcan.gc.ca/n1/tbl/csv/10100139-eng.zip"
@@ -50,6 +50,9 @@ df = (
     .sort_values(["indicator", "date"])
 )
 
+if df.empty:
+    raise ValueError("No valid interest_rates observations matched Statistics Canada filters")
+
 df.to_csv("data/processed/interest_rates.csv", index=False)
 
 print("4. Updating PostgreSQL...")
@@ -59,7 +62,7 @@ records = [
     for r in df.itertuples(index=False)
 ]
 
-with psycopg2.connect(dbname="statdata") as conn:
+with get_connection() as conn:
     with conn.cursor() as cur:
 
         cur.execute("""

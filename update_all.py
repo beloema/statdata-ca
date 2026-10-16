@@ -20,7 +20,7 @@ def download(table, name):
 
     result = response.json()
     if result["status"] != "SUCCESS":
-        raise RuntimeError(result)
+        raise RuntimeError(f"Statistics Canada API returned an unsuccessful status for {table}")
 
     obj = result["object"]
     url = obj if isinstance(obj, str) else obj["downloadLink"]
@@ -53,6 +53,9 @@ def run(script):
 
 
 def main():
+    Path("data/raw").mkdir(parents=True, exist_ok=True)
+    Path("data/processed").mkdir(parents=True, exist_ok=True)
+
     for table, name in DATASETS.items():
         download(table, name)
 

@@ -1,6 +1,5 @@
 import pytest
-import psycopg2
-from app import app
+from app import app, get_db_connection
 
 TABLES = [
     "cpi", "interest_rates", "exchange_rates",
@@ -32,7 +31,7 @@ def test_dashboard(client):
 
 
 def test_all_datasets():
-    with psycopg2.connect(dbname="statdata") as conn:
+    with get_db_connection() as conn:
         with conn.cursor() as cur:
             for table in TABLES:
                 cur.execute(f"SELECT COUNT(*) FROM {table}")
