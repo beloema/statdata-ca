@@ -1,56 +1,85 @@
-# STATDATA.CA — Step 43: bilingual UI + source validation
+# STATDATA.CA
 
-This patch upgrades the existing project; it does **not** replace your dashboard or database.
+**Plateforme bilingue d'exploration et de visualisation de données canadiennes**  
+**Bilingual Canadian open-data dashboard — [English README](README.en.md)**
 
-## Install
+[Application Web](https://statdata.ca) · [Documentation technique](docs/ARCHITECTURE.md) · [Sources](docs/SOURCES.md)
 
-Open Terminal in `~/Desktop/statdata-ca`, with its `.venv` activated, then run:
+Projet réalisé par **Emanuel Belony** dans le cadre de **SCI 1402 — Projet en science des données**, Université TÉLUQ, Certificat en science des données (4865).
 
-```bash
-unzip -o ~/Downloads/statdata_step43.zip -d .
-python tools/apply_upgrade.py
-python -m pytest tests/ -v
+## Présentation
+
+Statistique Canada publie des tableaux riches, mais leur consultation conjointe exige souvent plusieurs extractions et transformations. STATDATA.CA regroupe **six tableaux officiels** dans une interface bilingue (français/anglais) pour faciliter la consultation de séries historiques, les comparaisons régionales et l'exportation des résultats. L'application conserve les dates de référence et les unités des sources.
+
+## Fonctionnalités
+
+- Tableaux de bord interactifs, graphiques temporels et filtres de période.
+- Comparaisons entre le Canada et les régions disponibles selon l'indicateur.
+- Résultats descriptifs et endpoints JSON pour les graphiques et statistiques.
+- Téléchargement de données au format CSV en français ou en anglais.
+- Interface FR/EN et mode clair/sombre.
+- Mise à jour quotidienne déclenchée par GitHub Actions, avec validation des clés uniques.
+
+## Indicateurs et sources
+
+| Domaine | Tableau Statistique Canada | Granularité retenue |
+| --- | --- | --- |
+| Indice des prix à la consommation (IPC) | `18-10-0004-01` | Canada, IPC d'ensemble, mensuel |
+| Taux d'intérêt | `10-10-0139-01` | Canada, six indicateurs, quotidien |
+| Taux de change | `33-10-0036-01` | Canada, six devises, quotidien |
+| Marché du travail | `14-10-0287-01` | Canada et régions disponibles, cinq indicateurs, mensuel |
+| Produit intérieur brut réel | `36-10-0434-01` | Canada, trois groupes d'industries, mensuel |
+| Population | `17-10-0009-01` | Canada, provinces et territoires, trimestriel |
+
+Détails des filtres, des unités et des sources : [docs/SOURCES.md](docs/SOURCES.md).
+
+## Technologies
+
+Python, Pandas, Flask, PostgreSQL (Neon), SQL, HTML/CSS/JavaScript, Chart.js, GitHub Actions et Render.
+
+```text
+Statistique Canada (CSV / API)
+           ↓
+       Python / Pandas
+    extraction et nettoyage
+           ↓
+PostgreSQL — Neon (INSERT ... ON CONFLICT)
+           ↓
+        Flask / JSON API
+           ↓
+STATDATA.CA — graphiques / tableaux / CSV
 ```
 
-Restart Flask if its debug auto-reloader did not restart, and hard-refresh
-`http://127.0.0.1:5000/dashboard`.
+## État vérifié du projet
 
-## Validate against Statistics Canada
+- **16 octobre 2026 :** exécution manuelle GitHub Actions réussie en **2 min 8 s**.
+- **127 664 observations** dans les six tables après mise à jour ; **aucune clé dupliquée** signalée.
+- La planification quotidienne est configurée ; son exécution autonome doit être confirmée à la prochaine échéance.
 
-```bash
-python tools/validate_official.py
-```
+Ces chiffres décrivent une **validation datée**, non un compteur permanent.
 
-This fetches new copies of all six official table CSV files through the Statistics
-Canada Web Data Service, checks every filtered official value against PostgreSQL,
-checks annual CPI inflation, and independently recomputes overview and descriptive
-statistics. It also checks Quebec-vs-Canada population indexing.
+## Installation et exécution
 
-For an offline comparison against the CSV files you already downloaded:
+Les prérequis, la préparation d'une base indépendante, l'utilisation de `DATABASE_URL` et les tests sont détaillés dans [docs/INSTALLATION.md](docs/INSTALLATION.md). Ne commitez jamais votre fichier `.env`.
 
 ```bash
-python tools/validate_official.py --local
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest -q tests/test_daily_update.py
 ```
 
-If the live validation reports missing observations because Statistics Canada has
-published more data since your last run, update the database and run validation again:
+La validation complète et l'ETL nécessitent une base PostgreSQL accessible et initialisée. Voir le guide avant de lancer `python update_all.py`.
 
-```bash
-python update_all.py
-python tools/validate_official.py
-```
+## Documentation
 
-CSV exports use French headers and units when FR is selected; English otherwise.
-The `date` column remains ISO 8601 and numeric fields stay machine-readable in
-both languages. The browser translates display dates and formats chart numbers.
+- [Installation et tests](docs/INSTALLATION.md)
+- [Architecture et API](docs/ARCHITECTURE.md)
+- [Sources et sélection des observations](docs/SOURCES.md)
+- [ETL, mises à jour et contrôles](docs/ETL.md)
+- [Déploiement et exploitation](docs/DEPLOYMENT.md)
+- [Sécurité et accès pour l'évaluation](docs/ACCESS.md)
 
-## Safety and recovery
+## Usage académique et provenance
 
-The installer creates `*.before-step43` copies beside each modified file.
-To roll back, restore those backups and hard-refresh the browser. Existing
-`app/static/i18n.js` is retained but no longer loaded.
-
-No domain/DNS or hosting configuration is changed by this patch.
-
-The CPI inflation view is aligned with the **one-decimal** year-over-year rate
-used in Statistics Canada publications (for example, 3.0% in August 2026).
+STATDATA.CA est un projet d'étude indépendant. Les données proviennent de **Statistique Canada** ; la sélection, la transformation et la présentation constituent le travail du projet. Les valeurs publiées ne sont pas des prévisions et doivent être interprétées en tenant compte de leur date de référence et des révisions de la source.
